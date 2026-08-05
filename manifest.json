@@ -1,0 +1,17 @@
+{
+  "name": "Registo Diário · Lounge Porto",
+  "short_name": "Registo",
+  "description": "Registo diário de remanescentes e fim de stock do Lounge do Porto (OPO)",
+  "start_url": "/lounge/index.html",
+  "scope": "/lounge/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#1a2e5a",
+  "theme_color": "#1a2e5a",
+  "lang": "pt",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
