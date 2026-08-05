@@ -11,6 +11,9 @@
     }
   </script>
   <title>Registo Diário · Portal · Entrar</title>
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#1a2e5a" />
+  <link rel="apple-touch-icon" href="icon-192.png" />
   <link rel="stylesheet" href="assets/style.css" />
   <style>
     /* Mobile: campos com 16px evitam o zoom automático do iOS/Android ao focar */
@@ -92,6 +95,9 @@
       }
     });
 
+  </script>
+  <script>
+    if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
   </script>
 </body>
 </html>
