@@ -217,7 +217,24 @@
       return session;
     }
 
-    function hoje() { return new Date().toISOString().slice(0, 10); }
+    function hoje() {
+      // data LOCAL (toISOString é UTC e falhava entre a meia-noite e a 1h)
+      const d = new Date();
+      return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+    }
+
+    // ── Mudança automática de dia (às 2h00) ──
+    // Se a página ficar aberta de um dia para o outro (telemóvel na copa),
+    // a partir das 2h00 recarrega sozinha para o dia corrente — evita gravar
+    // ou editar por engano em cima do registo do dia anterior.
+    const DIA_CARREGADO = (function(){ const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); })();
+    function checkDiaAtual() {
+      if (hoje() !== DIA_CARREGADO && new Date().getHours() >= 2) location.reload();
+    }
+    setInterval(checkDiaAtual, 60 * 1000);
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) checkDiaAtual(); });
+    window.addEventListener('pageshow', checkDiaAtual);
+    window.addEventListener('focus', checkDiaAtual);
     function agora() {
       const d = new Date();
       return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
