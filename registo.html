@@ -96,6 +96,18 @@
     }
     .empty-note { font-size: 13.5px; color: var(--color-text-muted); }
   
+    /* Campo obrigatório */
+    .obrig { color: #b3261e; font-weight: 700; }
+    .reg-field input.campo-erro {
+      border-color: #b3261e !important;
+      box-shadow: 0 0 0 3px rgba(179,38,30,.14) !important;
+      background: #fff6f5 !important;
+      animation: tremer .32s ease; }
+    @keyframes tremer {
+      0%,100% { transform: translateX(0); }
+      25% { transform: translateX(-5px); }
+      75% { transform: translateX(5px); } }
+
     /* Popup de confirmação */
     #ok-overlay { position: fixed; inset: 0; background: rgba(15,30,40,.5);
       display: none; align-items: center; justify-content: center; z-index: 700; padding: 20px; }
@@ -104,6 +116,8 @@
       width: min(92vw, 360px); text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,.28); }
     .ok-icon { width: 58px; height: 58px; border-radius: 50%; background: #e6f6ec;
       color: #1a7f37; font-size: 30px; line-height: 58px; margin: 0 auto 14px; }
+    #ok-overlay.aviso .ok-icon { background: #fdecea; color: #b3261e; }
+    #ok-overlay.aviso .ok-btn { background: #b3261e; }
     .ok-title { font-size: 17px; font-weight: 700; color: var(--color-text); margin: 0 0 6px; }
     .ok-text { font-size: 14px; color: var(--color-text-muted); margin: 0 0 20px; }
     .ok-btn { width: 100%; border: none; border-radius: 10px; padding: 13px 0;
@@ -131,8 +145,8 @@
             <input type="date" id="rem-data" />
           </div>
           <div class="reg-field">
-            <label for="rem-extra">Entregas extra</label>
-            <input type="number" id="rem-extra" min="0" step="1" value="0" />
+            <label for="rem-extra">Entregas extra <span class="obrig">*</span></label>
+            <input type="number" id="rem-extra" min="0" step="1" placeholder="0 se não houve" inputmode="numeric" />
           </div>
         </div>
         <p class="day-status" id="rem-status">A carregar…</p>
@@ -288,7 +302,7 @@
 
       const inputs = document.querySelectorAll('#prod-grid input');
       if (row) {
-        document.getElementById('rem-extra').value = row.extra || 0;
+        document.getElementById('rem-extra').value = (row.extra ?? 0);
         inputs.forEach((inp) => {
           const nome = PRODUTOS[+inp.dataset.prod];
           const v = row.valores ? row.valores[nome] : undefined;
@@ -298,7 +312,8 @@
         const quando = row.updated_at ? new Date(row.updated_at).toLocaleString('pt-PT') : '';
         statusEl.innerHTML = `Dia já registado por <strong>${row.atualizado_por || '—'}</strong> (${quando}). Podes corrigir e voltar a guardar.`;
       } else {
-        document.getElementById('rem-extra').value = 0;
+        document.getElementById('rem-extra').value = '';
+        document.getElementById('rem-extra').classList.remove('campo-erro');
         inputs.forEach((inp) => { inp.value = ''; inp.classList.remove('filled'); });
         statusEl.innerHTML = 'Dia <strong>ainda sem registo</strong>. Preenche o remanescente de cada produto ao fim do dia.';
       }
@@ -310,6 +325,21 @@
       const msg = document.getElementById('rem-msg');
       const data = document.getElementById('rem-data').value;
       if (!data) { msg.textContent = 'Escolhe o dia.'; msg.className = 'save-msg err'; return; }
+
+      // Entregas extra é obrigatório — mesmo que seja zero, tem de ser preenchido
+      const extraEl = document.getElementById('rem-extra');
+      if (extraEl.value.trim() === '' || isNaN(+extraEl.value)) {
+        msg.textContent = 'Falta preencher as entregas extra.'; msg.className = 'save-msg err';
+        extraEl.classList.add('campo-erro');
+        showOk('Falta preencher', 'Indica o número de entregas extra do dia. Se não houve nenhuma, escreve 0.', {
+          aviso: true,
+          aoFechar: () => {
+            extraEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            extraEl.focus(); extraEl.select();
+          },
+        });
+        return;
+      }
 
       const valores = {};
       let algum = false;
@@ -323,7 +353,7 @@
       btn.disabled = true; msg.textContent = 'A guardar…'; msg.className = 'save-msg';
       const { error } = await supabaseClient.from('rem_diario').upsert({
         data,
-        extra: +document.getElementById('rem-extra').value || 0,
+        extra: +extraEl.value,
         valores,
         atualizado_por: OPERADOR,
         updated_at: new Date().toISOString(),
@@ -334,6 +364,11 @@
       showOk('Gravado com sucesso', `Remanescentes do dia ${new Date(data + 'T00:00:00').toLocaleDateString('pt-PT')} registados.`);
       loadDia();
     }
+
+    // limpar o destaque de erro assim que o campo é preenchido
+    document.addEventListener('input', (ev) => {
+      if (ev.target.id === 'rem-extra') ev.target.classList.remove('campo-erro');
+    });
 
     // ── Fim de stock ──
     async function loadOOS() {
@@ -387,14 +422,22 @@
 
 
     // ── Popup de confirmação ──
-    function showOk(titulo, texto) {
+    let OK_AO_FECHAR = null;
+    function showOk(titulo, texto, opts) {
+      opts = opts || {};
+      const ovl = document.getElementById('ok-overlay');
       document.getElementById('ok-title').textContent = titulo;
       document.getElementById('ok-text').textContent = texto || '';
-      document.getElementById('ok-overlay').classList.add('show');
+      document.querySelector('#ok-overlay .ok-icon').textContent = opts.aviso ? '!' : '✓';
+      ovl.classList.toggle('aviso', !!opts.aviso);
+      OK_AO_FECHAR = opts.aoFechar || null;
+      ovl.classList.add('show');
       document.getElementById('ok-btn').focus();
     }
     function showOkInit(){ document.getElementById('ok-btn').addEventListener('click', () => {
       document.getElementById('ok-overlay').classList.remove('show');
+      const fn = OK_AO_FECHAR; OK_AO_FECHAR = null;
+      if (fn) setTimeout(fn, 60);
     }); }
 
     // ── Init ──
