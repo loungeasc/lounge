@@ -10,4 +10,4 @@ window.SUPABASE_URL = 'https://uogrldgopqzdicrwcwir.supabase.co';
 window.SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_wjWRDRsB9LNA7XIn4fsXBw_-_b2yVnV';
 
 // Nome do portal — muda aqui e atualiza-se em todas as páginas
-window.APP_NAME = 'Porto Airport Lounge - Portal';
+window.APP_NAME = 'Registo Diário';
