@@ -84,7 +84,7 @@
     const slots = { left: '', actions: '', strip: '' };
     el.querySelectorAll('template[data-slot]').forEach((t) => { slots[t.dataset.slot] = t.innerHTML; });
 
-    const code = el.dataset.code || 'OPO';
+    const code = el.dataset.code || 'REG';
     const title = el.dataset.title || 'Portal';
     const sub = el.dataset.subtitle || '';
     const subId = el.dataset.subtitleId || '';
@@ -102,7 +102,7 @@
         `<div class="ph__left">${slots.left}${backHtml}` +
           `<div class="ph__mark">${esc(code)}</div>` +
           `<div class="ph__titles">` +
-            `<div class="ph__kicker">Porto Airport Lounge</div>` +
+            
             `<div class="ph__name">${esc(title)}${subHtml}</div>` +
           `</div>` +
         `</div>` +
